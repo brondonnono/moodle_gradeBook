@@ -4,7 +4,7 @@
     $school_qrcode_img = "./assets/qrcode.png";
     $student_name = "SCOFIELD_MACBOOK237";
     $scholar_class = "NIVEAU INTERMEDIARE - NIVEAU 19";
-    $userId = 9;
+    $userId = 4;
     require_once 'connexion.php';
 
     // configuration grade page sql to retrieve all students data
@@ -22,7 +22,7 @@
         //     break;
     }
     $student_name = strtoupper($user['firstname']. ' '. $user['lastname']);
-
+    $a = 'a';
     // get courses list
     $getCourses = $bdd->prepare("SELECT * FROM mdl_course");
     $getCourses->execute();
@@ -32,6 +32,18 @@
     $userCoursesGradesRes = $getUserCoursesGrades->fetchAll();
     $userCoursesGrades = [];
     $i = 0;
+
+    $getTeachers = $bdd->prepare("SELECT c.id as courseid, c.shortname AS courseShortName, 
+    c.fullname AS courseFullName, cx.id AS contextid, roleid,
+    u.id as userid, CONCAT(u.firstname, ' ', u.lastname) AS name
+    FROM mdl_context  cx, mdl_role_assignments ra, mdl_user u, mdl_course c
+    WHERE contextlevel = 50 AND cx.id = ra.contextid AND roleid = 3
+    AND u.id = userid AND c.id = cx.instanceid AND c.format != 'site' ");
+
+    $getTeachers->execute();
+    $teachers = $getTeachers->fetchAll();
+    $teachersList = [];
+
     foreach($userCoursesGradesRes as $courseGrade) {
         $i++;
         $userCoursesGrades['courseid'] = $courseGrade['itemid'];
@@ -47,6 +59,12 @@
         else
             return substr($grade,0,5);
     }
+
+    function getCorrectDecimalFromHex($number, $precision = 2) {
+        $prec = 10 ** $precision;
+        return intdiv(round($number * $prec, PHP_ROUND_HALF_DOWN), 1) / $prec;
+    }
+
 ?>
 
 <!Doctype HTML>
@@ -76,7 +94,6 @@
     <div class="container-fluid p-2">
         <div id="page-content" class="row m-2 pb-3 d-print-block">
             <div class="mb-4 col-md-12 row">
-
                 <table class="table">
                     <thead>
                         <th>
@@ -128,18 +145,22 @@
                     </thead>
                     <tbody>
                         <?php
+                            $comments = [];
+                            $j = 0;
                             foreach($userCoursesGradesRes as $courseGrade) {
                                 $courseNb = sizeof($userCoursesGradesRes);
                             ?>
                         <tr>
-                        <?php 
-                            echo '<td>'.$courseGrade['fullname'].'</td>';
-                            echo '<td class="text-center font-weight-bold"> - </td>';
-                            for ($i=1; $i<$nb_period+1; $i++) {
-                                echo '<td class="text-center">'.getCorrectDecimal($courseGrade['finalgrade']).'</td>';
-                                $sumPeriodGrade[$i] += getCorrectDecimal($courseGrade['finalgrade']);
+                        <?php
+                                $comments[$j] = $courseGrade['feedback'] == '' ? 'Pas de commentaires disponibles' : $courseGrade['feedback'];                                
+                                echo '<td>'.$courseGrade['fullname'].'</td>';
+                                $j++;
+                                echo '<td class="text-center font-weight-bold"> - </td>';
+                                for ($i=1; $i<$nb_period+1; $i++) {
+                                    echo '<td class="text-center">'.getCorrectDecimal($courseGrade['finalgrade']).'</td>';
+                                    $sumPeriodGrade[$i] += getCorrectDecimal($courseGrade['finalgrade']);
+                                }
                             }
-                        }
                         ?>
                         </tr>
                         <tr class="table-secondary">
@@ -148,7 +169,7 @@
                             <?php
                                 for ($i = 1; $i < $nb_period+1; $i++) {
                                     $sumPeriodGrade[$i] /= $courseNb;
-                                    echo '<td class="moy">'.$sumPeriodGrade[$i].'</td>';
+                                    echo '<td class="moy text-center">'.getCorrectDecimalFromHex($sumPeriodGrade[$i]).'</td>';
                                 }
                             ?>
                         </tr>
@@ -165,12 +186,30 @@
                     </tbody>
                 </table>
             </div>
-            <div class="col-md-12 border row table-responsive-md">
-                <table class="table">
-                    <tbody>
-
-                    </tbody>
-                </table>
+            <div class="mb-4 col-md-12">
+                <div class="border p-3">
+                    <?php
+                        for ($i=1; $i<$nb_period+1; $i++) {
+                            $j = 0;
+                            $periodX = 'Période '. $i;
+                            echo '<div class="mb-6"><h4><u>Commentaire des enseignants ('.$periodX.')</u></h4>';
+                            foreach ($teachers as $teacher) {
+                                echo '<div class="row">';
+                                echo '<h6 class="bold py-2 col-md-4">'.$teacher['courseFullName'].' :</h6>';
+                                echo '<div class="col-md-8 py-2">'.$comments[$j].' <i>['.$teacher['name'].']</i></div>';
+                                echo '</div>';
+                                $j++;
+                                $comments[$j] = $j >= sizeof($comments) ? 'Pas de commentaires disponibles' : $comments[$j];
+                            }
+                            echo '</div>';
+                        } 
+                    ?>
+                </div>
+            </div>
+            <div class="mb-4 col-md-12">
+                <div class="border p-3">
+                    <div class="mb-6"><h4><u>Compétences acquises</u></h4>
+                </div>
             </div>
         </div>
         <input type="submit" class="btn btn-primary print" onclick="printIt()" value="print">
