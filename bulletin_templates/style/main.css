@@ -1,9 +1,20 @@
-.imgHeader {
-    height: 100px !important;
+/* .bg-blue {
+    background: #2c6ed5;
 }
 
-@media print { 
-    .table td, .table th { 
-        background-color: rgb(243, 151, 151) !important; 
-    } 
+.bg-white {
+    background: #fff;
+} */
+
+/* ==========================================================================
+   #CARD
+   ========================================================================== */
+/* .card-1 {
+    -webkit-box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.15);
+    -moz-box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.15);
+    box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.15);
 }
+
+.p-y-100 {
+    padding-top: 100px !important;
+} */
