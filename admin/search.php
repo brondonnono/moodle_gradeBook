@@ -88,6 +88,10 @@ if ($showsettingslinks) {
         }
         echo $OUTPUT->render_from_template('core/settings_link_page',
             ['node' => $node, 'secondarynavigation' => $secondarynavigation]);
+        echo '<br> <hr> <ul class="nav nav-pills justify-content-right"><li class="nav-item">
+            <a href="../bulletin_templates/" class="nav-link active" aria-current="page"> Imprimer un bulletin </a>
+        </li>
+    </ul>';
     }
 }
 
